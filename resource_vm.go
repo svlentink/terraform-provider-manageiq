@@ -75,23 +75,6 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/provision_req
 //  d.Set("vm_memory", vm_memory)
 //  d.Set("vlan", vlan)
   return err
-
-/* Example code:
-  client := m.(*MyClient)
-
-  // Attempt to read from an upstream API
-  obj, ok := client.Get(d.Id())
-
-  // If the resource does not exist, inform Terraform. We want to immediately
-  // return here to prevent further processing.
-  if !ok {
-    d.SetId("")
-    return nil
-  }
-
-  d.Set("address", obj.Address)
-  return nil
-*/
 }
 
 func resourceVMDelete(d *schema.ResourceData, m interface{}) error {
@@ -99,9 +82,11 @@ func resourceVMDelete(d *schema.ResourceData, m interface{}) error {
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/delete_vm.adoc
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#delete-vm
 */
-  return nil
+  body := map[string]string{"action": "delete"}
+  path := "/vms/" + d.Id()
+  _, err := apicall(path, "DELETE", body)
+  return err
 }
-
 
 
 func orderFromCatalog(resource_params map[string]string) (map[string]interface{}, error) {

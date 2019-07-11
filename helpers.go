@@ -27,7 +27,7 @@ func loadconfig() configfile {
 }
 
 
-func apicall(path string, method string, body map[string]interface{} ) (map[string]interface{}, error) {
+func apicall(path string, method string, body interface{} ) (map[string]interface{}, error) {
   if method == "" {
     method = "GET"
   }

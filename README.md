@@ -39,6 +39,7 @@ EOF
 - https://github.com/ManageIQ/manageiq_docs/tree/master/api/examples
 - https://access.redhat.com/documentation/en-us/red_hat_cloudforms/4.7/html-single/red_hat_cloudforms_rest_api/index
 - http://manageiq.org/docs/reference/fine/api/examples/queries
+- https://liquidat.wordpress.com/2015/08/27/howto-accessing-cloudforms-3-2-via-rest-with-python/
 
 ## Tags
 
