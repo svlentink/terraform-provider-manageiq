@@ -19,7 +19,7 @@ MANAGEIQ_PASSWORD=example123
 MANAGEIQ_CONFIGFILE=~/manageiq_terraform_config.yaml
 ```
 
-[configfile format](https://github.com/svlentink/terraform-provider-manageiq/blob/master/helpers.go)
+[configfile format](https://github.com/svlentink/terraform-provider-manageiq/blob/master/config_file_format.go)
 with example values:
 ```yaml
 cat << EOF > ~/manageiq_terraform_config.yaml
@@ -44,4 +44,4 @@ EOF
 
 - CloudForms Management Engine - terraform-provider-cloudformsmanagementengine
 - CFME - terraform-provider-cfme
-- ManageIQ - terraform-provider-managemq
+- ManageIQ - terraform-provider-manageiq

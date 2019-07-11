@@ -11,11 +11,6 @@ import (
 //  "net/url"
 )
 
-type configfile struct {
-  api_hostname string
-  order_resource_parameters map[string]string
-}
-
 func loadconfig() configfile {
   fileloc := os.Getenv("MANAGEIQ_CONFIGFILE")
   yamlfile, err := ioutil.ReadFile(fileloc)
