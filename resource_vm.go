@@ -1,12 +1,6 @@
 package main
 
 import (
-  "bytes"
-  "os"
-  "encoding/json"
-  "net/http"
-// TODO: PathEscape and QueryEscape, for security
-//  "net/url"
   "github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -51,7 +45,8 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/provision_req
 
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/order_service.adoc
 */
-  var resource_params map[string]string // TODO Here you should put your vm values, like vm_memory and tags such as billing/cost center
+  conf := loadconfig()
+  var resource_params map[string]string = conf.order_resource_parameters
   resp, err := orderFromCatalog(resource_params)
   if err != nil {
     return err
@@ -107,35 +102,7 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#del
   return nil
 }
 
-func apicall(path string, method string, body map[string]interface{} ) (map[string]interface{}, error) {
-  if method == "" {
-    method = "GET"
-  }
-  var uri_base string = "https://" + os.Getenv("MANAGEIQ_API_HOSTNAME") + "/api/"
-  var username string = os.Getenv("MANAGEIQ_USERNAME")
-  var password string = os.Getenv("MANAGEIQ_PASSWORD")
 
-  client := &http.Client{}
-  
-  var uri string
-  // both a relative from /api or a full (get from link) are possible
-  if path[0:4] == "http" {
-    uri = path
-  } else {
-    uri = uri_base + path
-  }
-  jsonbody, err := json.Marshal(body)
-  reqbody := bytes.NewBuffer(jsonbody)
-  req, err := http.NewRequest(method, uri, reqbody)
-  req.SetBasicAuth(username,password)
-  resp, err := client.Do(req)
-  
-  var result map[string]interface{}
-  json.NewDecoder(resp.Body).Decode(&result)
-  //json.Unmarshal(resp.Body,&result)
-
-  return result, err
-}
 
 func orderFromCatalog(resource_params map[string]string) (map[string]interface{}, error) {
   path := "/service_catalogs?expand=resources"

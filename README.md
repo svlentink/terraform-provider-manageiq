@@ -12,12 +12,25 @@ docker-compose up
 
 ## run
 
-required variables:
+required environment variables:
 ```
-MANAGEIQ_API_HOSTNAME
-MANAGEIQ_USERNAME
-MANAGEIQ_PASSWORD
+MANAGEIQ_USERNAME=ldapuser01
+MANAGEIQ_PASSWORD=example123
+MANAGEIQ_CONFIGFILE=~/manageiq_terraform_config.yaml
+```
 
+[configfile format](https://github.com/svlentink/terraform-provider-manageiq/blob/master/helpers.go)
+with example values:
+```yaml
+cat << EOF > ~/manageiq_terraform_config.yaml
+api_hostname: manageiq.example.com
+order_resource_parameters:
+  examplekey: example value
+  tag_0_backup: yes
+  tag_0_department: IT services
+  subnet_name: prod_dmz_EU_01
+  vm_memory: 2048
+EOF
 ```
 
 ## Links
