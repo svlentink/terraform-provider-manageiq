@@ -1,0 +1,13 @@
+version: '3'
+services:
+  build-provider:
+#    image: golang:alpine
+    build: .
+    volumes:
+      - $PWD:/data:ro
+#      - /tmp/terraform-builder-output/:/out
+      - $PWD/build-and-test.sh:/docker-entrypoint.sh:ro
+    working_dir: /data
+#    command: ["go","build","-o","/out/terraform-provider-manageiq"]
+    entrypoint: ["/docker-entrypoint.sh"]
+
