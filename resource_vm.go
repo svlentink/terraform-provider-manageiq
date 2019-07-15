@@ -47,7 +47,7 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/provision_req
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/order_service.adoc
 */
   conf := loadconfig()
-  var resource_params map[string]string = conf.order_resource_parameters
+  var resource_params map[string]string = conf.Orderresourceparameters
   resp, err := orderFromCatalog(resource_params)
   if err != nil {
     fmt.Println("Error in resourceVMCreate. %T",err)

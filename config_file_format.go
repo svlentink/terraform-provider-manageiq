@@ -1,6 +1,6 @@
 package main
 
 type configfile struct {
-  api_hostname string
-  order_resource_parameters map[string]string
+  Apihostname string `yaml:"api_hostname"`
+  Orderresourceparameters map[string]string `yaml:"order_resource_parameters"`
 }

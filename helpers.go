@@ -21,13 +21,13 @@ func loadconfig() configfile {
     panic(err)
   }
 
-  conf := configfile{}
+  var conf configfile
   err2 := yaml.Unmarshal(yamlfile, &conf)
   if err2 != nil {
     log.Printf("[DEBUG] Failed parsing MANAGEIQ_CONFIGFILE. %T", err2)
     panic(err2)
   }
-  log.Printf("[DEBUG] Loaded config. %T", conf)
+  log.Printf("[DEBUG] Loaded config. %T %v", conf, fileloc)
   return conf
 }
 
@@ -37,7 +37,7 @@ func apicall(path string, method string, body interface{} ) (map[string]interfac
     method = "GET"
   }
   conf := loadconfig()
-  var uri_base string = "https://" + conf.api_hostname + "/api/"
+  var uri_base string = "https://" + conf.Apihostname + "/api/"
   var username string = os.Getenv("MANAGEIQ_USERNAME")
   var password string = os.Getenv("MANAGEIQ_PASSWORD")
   log.Printf("[DEBUG] User %v will do an API call. %v %v",username,method,path)
