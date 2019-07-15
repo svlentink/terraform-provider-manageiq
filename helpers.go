@@ -20,7 +20,7 @@ func loadconfig() configfile {
     panic(err)
   }
 
-  var conf configfile
+  conf := configfile{}
   err2 := yaml.Unmarshal(yamlfile, &conf)
   if err2 != nil {
     fmt.Println("Failed parsing MANAGEIQ_CONFIGFILE. %T", err2)
@@ -41,7 +41,8 @@ func apicall(path string, method string, body interface{} ) (map[string]interfac
   var password string = os.Getenv("MANAGEIQ_PASSWORD")
   fmt.Println("User %v will do an API call. %v %v",username,method,path)
 
-  client := &http.Client{}
+  //tr := &http.Transport{ TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, }
+  client := &http.Client{} //Transport: tr}
   
   var uri string
   // both a relative from /api or a full (get from link) are possible
