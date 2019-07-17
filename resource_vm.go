@@ -142,19 +142,19 @@ func orderFromCatalog(resource_params map[string]string) string {
     }
     // if resp3["request_state"] == "finished"
     if resp3["request_tasks"] != nil {
-      reqts := resp3["request_tasks"].([]map[string]interface{})
-      for _,v := range reqts {
-        st := v["source_type"].(string)
-        if st != "" {
-          if st == "template" {
-            id = v["miq_request_id"].(string)
-            i = 999999 // exits the loop
-          }
+      log.Printf("Type request_tasks: %T", resp3["request_tasks"])
+      request_tasks := resp3["request_tasks"].([]interface{})
+      for _,v := range request_tasks {
+        task := v.(map[string]interface{})
+        dt := task["destination_type"].(string)
+        if dt == "Vm" {
+          id = task["miq_request_id"].(string)
+          i = 999999 // exits the loop
         }
       }
     }
   }
-  
+
   return id
 }
 
