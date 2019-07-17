@@ -70,7 +70,13 @@ func apicall(path string, method string, body interface{} ) (map[string]interfac
     log.Printf("Failed doing request: %T",err)
     panic(err)
   }
-  log.Printf("Request body: %v",resp.Body)
+  defer resp.Body.Close()
+  respbody, err := ioutil.ReadAll(resp.Body)
+  if err != nil {
+    log.Printf("Failed reading body: %T", err)
+    panic(err)
+  }
+  log.Printf("Request body: %v",string(respbody))
   
   var result map[string]interface{}
   json.NewDecoder(resp.Body).Decode(&result)
