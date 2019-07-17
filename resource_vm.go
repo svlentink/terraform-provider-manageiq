@@ -4,6 +4,7 @@ import (
   "github.com/hashicorp/terraform/helper/schema"
   "log"
   "time"
+  "fmt"
 )
 
 func resourceVM() *schema.Resource {
@@ -152,6 +153,7 @@ func orderFromCatalog(resource_params map[string]string) string {
         if dt != nil {
           if dt.(string) == "Vm" {
             id = task["miq_request_id"].(string)
+            log.Printf("Found id: %v",id)
             i = 999999 // exits the loop
           }
         } else {
@@ -160,7 +162,11 @@ func orderFromCatalog(resource_params map[string]string) string {
       }
     }
   }
-
+  if id == "" {
+    msg := "Got no new ID, please look at this manually"
+    log.Printf(msg)
+    fmt.Errorf(msg)
+  }
   return id
 }
 
