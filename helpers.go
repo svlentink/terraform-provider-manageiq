@@ -42,6 +42,11 @@ func apicall(path string, method string, body interface{} ) (map[string]interfac
   var username string = os.Getenv("MANAGEIQ_USERNAME")
   var password string = os.Getenv("MANAGEIQ_PASSWORD")
   var insecure string = os.Getenv("MANAGEIQ_INSECURE")
+  
+  if string(path[0]) == "/" {
+    // CFME throws an error if you have /api//service_catalogs
+    uri_base = uri_base[:len(uri_base)-1]
+  }
 
   client := &http.Client{}
   if strings.ToUpper(insecure) == "TRUE" {
