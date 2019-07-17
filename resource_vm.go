@@ -144,12 +144,18 @@ func orderFromCatalog(resource_params map[string]string) string {
     if resp3["request_tasks"] != nil {
       log.Printf("Type request_tasks: %T", resp3["request_tasks"])
       request_tasks := resp3["request_tasks"].([]interface{})
-      for _,v := range request_tasks {
-        task := v.(map[string]interface{})
-        dt := task["destination_type"].(string)
-        if dt == "Vm" {
-          id = task["miq_request_id"].(string)
-          i = 999999 // exits the loop
+      for _,val := range request_tasks {
+        log.Printf("Type val: %T",val)
+        task := val.(map[string]interface{})
+        log.Printf("Type dt: %T",task["destination_type"])
+        dt := task["destination_type"]
+        if dt != nil {
+          if dt.(string) == "Vm" {
+            id = task["miq_request_id"].(string)
+            i = 999999 // exits the loop
+          }
+        } else {
+          log.Printf("No destination_type found in on of the request_tasks")
         }
       }
     }
