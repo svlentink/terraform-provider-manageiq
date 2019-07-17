@@ -104,12 +104,19 @@ func orderFromCatalog(resource_params map[string]string) (map[string]interface{}
     log.Printf("Failed to get service_catalogs: %T",err)
     return resp, err
   }
+  log.Printf("Type resources: %T", resp["resources"])
   resources := resp["resources"].([]interface{})
+  log.Printf("Type resource: %T", resources[0])
   resource := resources[0].(map[string]interface{})
+  log.Printf("Type catalog_href: %T", resource["href"])
   catalog_href := resource["href"].(string)
+  log.Printf("Type template: %T", resource["service_templates"])
   template := resource["service_templates"].(map[string]interface{})
+  log.Printf("Type template_resources: %T", template["resources"])
   template_resources := template["resources"].([]interface{})
+  log.Printf("Type template_resource: %T", template_resources[0])
   template_resource := template_resources[0].(map[string]string)
+  log.Printf("Type service_href: %T", template_resource["href"])
   service_href := template_resource["href"]
   
   resource_params["href"] = service_href
