@@ -4,11 +4,12 @@ import (
   "bytes"
   "os"
   "log"
+  "strings"
   "encoding/json"
   "net/http"
   "gopkg.in/yaml.v2"
   "io/ioutil"
-//  "crypto/tls"  
+  "crypto/tls"  
 // TODO: PathEscape and QueryEscape, for security
 //  "net/url"
 )
@@ -40,10 +41,14 @@ func apicall(path string, method string, body interface{} ) (map[string]interfac
   var uri_base string = "https://" + conf.Apihostname + "/api/"
   var username string = os.Getenv("MANAGEIQ_USERNAME")
   var password string = os.Getenv("MANAGEIQ_PASSWORD")
+  var insecure string = os.Getenv("MANAGEIQ_INSECURE")
   log.Printf("[DEBUG] User %v will do an API call. %v %v",username,method,path)
 
-  //tr := &http.Transport{ TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, }
-  client := &http.Client{} //Transport: tr}
+  client := &http.Client{}
+  if strings.ToUpper(insecure) == "TRUE" {
+    tr := &http.Transport{ TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, }
+    client = &http.Client{Transport: tr}
+  }
   
   var uri string
   // both a relative from /api or a full (get from link) are possible

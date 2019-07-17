@@ -33,9 +33,14 @@ order_resource_parameters:
 EOF
 ```
 
+optional:
+```
+MANAGEIQ_INSECURE=true #ignores TLS warnings
+```
+
 ## Links
 
-- https://github.com/hashicorp/terraform/issues/16752
+- How to get logs: https://github.com/hashicorp/terraform/issues/16752
 - https://github.com/ManageIQ/manageiq_docs/blob/master/doc-REST_API/topics/Available_Actions.adoc
 - https://github.com/ManageIQ/manageiq_docs/tree/master/api/examples
 - https://access.redhat.com/documentation/en-us/red_hat_cloudforms/4.7/html-single/red_hat_cloudforms_rest_api/index
