@@ -42,7 +42,6 @@ func apicall(path string, method string, body interface{} ) (map[string]interfac
   var username string = os.Getenv("MANAGEIQ_USERNAME")
   var password string = os.Getenv("MANAGEIQ_PASSWORD")
   var insecure string = os.Getenv("MANAGEIQ_INSECURE")
-  log.Printf("User %v will do an API call: %v %v",username,method,path)
 
   client := &http.Client{}
   if strings.ToUpper(insecure) == "TRUE" {
@@ -57,6 +56,7 @@ func apicall(path string, method string, body interface{} ) (map[string]interfac
   } else {
     uri = uri_base + path
   }
+  log.Printf("User %v will do an API call: %v %v",username,method,uri)
   jsonbody, err := json.Marshal(body)
   reqbody := bytes.NewBuffer(jsonbody)
   req, err := http.NewRequest(method, uri, reqbody)
