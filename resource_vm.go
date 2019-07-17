@@ -115,9 +115,9 @@ func orderFromCatalog(resource_params map[string]string) (map[string]interface{}
   log.Printf("Type template_resources: %T", template["resources"])
   template_resources := template["resources"].([]interface{})
   log.Printf("Type template_resource: %T", template_resources[0])
-  template_resource := template_resources[0].(map[string]string)
+  template_resource := template_resources[0].(map[string]interface{})
   log.Printf("Type service_href: %T", template_resource["href"])
-  service_href := template_resource["href"]
+  service_href := template_resource["href"].(string)
   
   resource_params["href"] = service_href
   body := map[string]interface{}{ "action": "order", "resource": resource_params }
