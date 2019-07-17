@@ -81,11 +81,11 @@ func apicall(path string, method string, body interface{} ) (map[string]interfac
     log.Printf("Failed reading body: %T", err)
     panic(err)
   }
-  log.Printf("Request body: %v",string(respbody))
+  log.Printf("Response body: %v",string(respbody))
   
   var result map[string]interface{}
-  json.NewDecoder(resp.Body).Decode(&result)
-  //json.Unmarshal(resp.Body,&result)
+  //json.NewDecoder(resp.Body).Decode(&result)
+  json.Unmarshal(respbody,&result)
 
   log.Printf("Completed API call, returning a %T",result)
   return result, err
