@@ -3,6 +3,7 @@ package main
 import (
   "github.com/hashicorp/terraform/helper/schema"
   "log"
+  "time"
 )
 
 func resourceVM() *schema.Resource {
@@ -48,15 +49,7 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/order_service
 */
   conf := loadconfig()
   var resource_params map[string]string = conf.Orderresourceparameters
-  resp, err := orderFromCatalog(resource_params)
-  if err != nil {
-    log.Printf("Error in resourceVMCreate: %T",err)
-    return err
-  }
-  results := resp["results"]
-  resultlist := results.([]interface{})
-  result := resultlist[0].(map[string]interface{})
-  id := result["source_id"].(string)
+  id := orderFromCatalog(resource_params)
   d.SetId(id)
   log.Printf("Id (%v) of new resourceVM set", id)
   return resourceVMRead(d, m)
@@ -97,12 +90,12 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#del
 }
 
 
-func orderFromCatalog(resource_params map[string]string) (map[string]interface{}, error) {
+func orderFromCatalog(resource_params map[string]string) string {
   path := "/service_catalogs?expand=resources"
   resp, err := apicall(path,"",nil)
   if err != nil {
     log.Printf("Failed to get service_catalogs: %T",err)
-    return resp, err
+    panic(err)
   }
   log.Printf("Type resources: %T", resp["resources"])
   resources := resp["resources"].([]interface{})
@@ -122,10 +115,46 @@ func orderFromCatalog(resource_params map[string]string) (map[string]interface{}
   resource_params["href"] = service_href
   body := map[string]interface{}{ "action": "order", "resource": resource_params }
   order_href := catalog_href + "/service_templates"
-  res2, err2 := apicall(order_href, "POST", body)
-  if err2 != nil {
-    log.Printf("Failed to orderFromCatalog: %T",err2)
+  resp2, err := apicall(order_href, "POST", body)
+  if err != nil {
+    log.Printf("Failed to orderFromCatalog: %T",err)
+    panic(err)
   }
-  return res2, err2
+  
+  log.Printf("Type results: %T", resp2["results"])
+  results := resp2["results"]
+  log.Printf("Type resultlist: %T", results)
+  resultlist := results.([]interface{})
+  log.Printf("Type result: %T", resultlist[0])
+  result := resultlist[0].(map[string]interface{})
+  log.Printf("Type service_req_href: %T", result["href"])
+  service_req_href := result["href"].(string)
+  
+  path = service_req_href + "?expand=request_tasks"
+  var id string
+  // we'll loop for half an hour, increasing the timeout
+  // in javascript: var j=0;for(var i=0;i<61;i++){j+=i;console.log(j)}
+  for i := 0; i < 61; i++ {
+    time.Sleep(time.Duration(i) * time.Second)
+    resp3, err := apicall(path,"",nil)
+    if err != nil {
+      panic(err)
+    }
+    // if resp3["request_state"] == "finished"
+    if resp3["request_tasks"] != nil {
+      reqts := resp3["request_tasks"].([]map[string]interface{})
+      for _,v := range reqts {
+        st := v["source_type"].(string)
+        if st != "" {
+          if st == "template" {
+            id = v["miq_request_id"].(string)
+            i = 999999 // exits the loop
+          }
+        }
+      }
+    }
+  }
+  
+  return id
 }
 
