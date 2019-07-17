@@ -50,7 +50,7 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/order_service
   var resource_params map[string]string = conf.Orderresourceparameters
   resp, err := orderFromCatalog(resource_params)
   if err != nil {
-    log.Printf("[DEBUG] Error in resourceVMCreate. %T",err)
+    log.Printf("Error in resourceVMCreate: %T",err)
     return err
   }
   results := resp["results"]
@@ -58,7 +58,7 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/order_service
   result := resultlist[0].(map[string]interface{})
   id := result["source_id"].(string)
   d.SetId(id)
-  log.Printf("[DEBUG] Id of new resourceVM set. %v", id)
+  log.Printf("Id (%v) of new resourceVM set", id)
   return resourceVMRead(d, m)
 }
 
@@ -70,13 +70,13 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/provision_req
   path := "/vms/" + d.Id() //+ "?expand=tags"
   resp, err := apicall(path, "", nil)
   if err != nil {
-    log.Println("[DEBUG] Failed to read VM specs, removing it. %v",d.Id())
+    log.Println("Failed to read VM specs, removing %v",d.Id())
     d.SetId("")
     return nil
   }
   name := resp["name"].(string)
   d.Set("name", name)
-  log.Println("[DEBUG] VM name set. %v %v", name, d.Id())
+  log.Println("VM (%v) name set to %v", d.Id(), name)
 //  d.Set("vm_memory", vm_memory)
 //  d.Set("vlan", vlan)
   return err
@@ -91,7 +91,7 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#del
   path := "/vms/" + d.Id()
   _, err := apicall(path, "DELETE", body)
   if err != nil {
-    log.Println("[DEBUG] Failed deleting. %T",err)
+    log.Println("Failed deleting: %T",err)
   }
   return err
 }
@@ -101,7 +101,7 @@ func orderFromCatalog(resource_params map[string]string) (map[string]interface{}
   path := "/service_catalogs?expand=resources"
   resp, err := apicall(path,"",nil)
   if err != nil {
-    log.Printf("[DEBUG] Failed to get service_catalogs. %T",err)
+    log.Printf("Failed to get service_catalogs: %T",err)
     return resp, err
   }
   resources := resp["resources"].([]interface{})
@@ -117,7 +117,7 @@ func orderFromCatalog(resource_params map[string]string) (map[string]interface{}
   order_href := catalog_href + "/service_templates"
   res2, err2 := apicall(order_href, "POST", body)
   if err2 != nil {
-    log.Printf("[DEBUG] Failed to orderFromCatalog. %T",err2)
+    log.Printf("Failed to orderFromCatalog: %T",err2)
   }
   return res2, err2
 }
