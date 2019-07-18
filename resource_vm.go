@@ -22,6 +22,10 @@ src: https://www.terraform.io/docs/extend/writing-custom-providers.html
         Type:     schema.TypeString,
         Computed: true,
       },
+      "service_id": &schema.Schema{
+        Type:     schema.TypeString,
+        Computed: true,
+      },
 /*
       "vm_memory": &schema.Schema{
         Type:     schema.TypeInt,
@@ -50,9 +54,10 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/order_service
 */
   conf := loadconfig()
   var resource_params map[string]string = conf.Orderresourceparameters
-  id := orderFromCatalog(resource_params)
-  d.SetId(id)
-  log.Printf("Id (%v) of new resourceVM set", id)
+  vm_id, service_id := orderFromCatalog(resource_params)
+  d.SetId(vm_id)
+  d.Set("service_id",service_id)
+  log.Printf("Id (%v) of new resourceVM set", vm_id)
   return resourceVMRead(d, m)
 }
 
@@ -80,18 +85,30 @@ func resourceVMDelete(d *schema.ResourceData, m interface{}) error {
 /*
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/delete_vm.adoc
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#delete-vm
+
+https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/services.adoc#service-retiring-now
 */
-  body := map[string]string{"action": "delete"}
-  path := "/vms/" + d.Id()
-  _, err := apicall(path, "DELETE", body)
+
+/*
+  body := map[string]string{"action": "retire"}
+  path := "/services/" + d.Get("service_id").(string)
+  _, err := apicall(path, "POST", body)
   if err != nil {
-    log.Printf("Failed deleting: %T",err)
+    log.Printf("Failed retiring: %T",err)
+    return err
   }
-  return err
+*/
+
+  body2 := map[string]string{"action": "delete"}
+  path2 := "/vms/" + d.Id()
+  _, err2 := apicall(path2, "DELETE", body2)
+  if err2 != nil {
+    log.Printf("Failed deleting: %T",err2)
+  }
+  return err2
 }
 
-
-func orderFromCatalog(resource_params map[string]string) string {
+func orderFromCatalog(resource_params map[string]string) (string, string) {
   path := "/service_catalogs?expand=resources"
   resp, err := apicall(path,"",nil)
   if err != nil {
@@ -130,9 +147,11 @@ func orderFromCatalog(resource_params map[string]string) string {
   result := resultlist[0].(map[string]interface{})
   log.Printf("Type service_req_href: %T", result["href"])
   service_req_href := result["href"].(string)
+  log.Printf("Type service_id: %T", result["id"])
+  service_id := result["id"].(string)
   
   path = service_req_href + "?expand=request_tasks"
-  var id string
+  var vm_id string
   // we'll loop for half an hour, increasing the timeout
   // in javascript: var j=0;for(var i=0;i<61;i++){j+=i;console.log(j)}
   for i := 0; i < 61; i++ {
@@ -153,8 +172,8 @@ func orderFromCatalog(resource_params map[string]string) string {
         if dt != nil {
           if dt.(string) == "Vm" {
             if task["destination_id"] != nil {
-              id = task["destination_id"].(string)
-              log.Printf("Found id: %v",id)
+              vm_id = task["destination_id"].(string)
+              log.Printf("Found vm id: %v, part of service %v",vm_id,service_id)
               i = 999999 // exits the loop
             }
           }
@@ -164,11 +183,11 @@ func orderFromCatalog(resource_params map[string]string) string {
       }
     }
   }
-  if id == "" {
+  if vm_id == "" {
     msg := "Got no new ID, please look at this manually"
     log.Printf(msg)
     fmt.Errorf(msg)
   }
-  return id
+  return vm_id, service_id
 }
 
