@@ -61,22 +61,16 @@ func resourceVMRead(d *schema.ResourceData, m interface{}) error {
 http://manageiq.org/docs/reference/fine/api/examples/queries
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/provision_request.adoc
 */
-
-  // TODO
-  d.Set("name",d.Id())
-  log.Printf("we haven't implemented reading, since it takes a long time for it to be available")
-  return nil 
-
   path := "/vms/" + d.Id() //+ "?expand=tags"
   resp, err := apicall(path, "", nil)
   if err != nil {
-    log.Println("Failed to read VM specs, removing %v",d.Id())
+    log.Printf("Failed to read VM specs, removing %v",d.Id())
     d.SetId("")
     return nil
   }
   name := resp["name"].(string)
   d.Set("name", name)
-  log.Println("VM (%v) name set to %v", d.Id(), name)
+  log.Printf("VM (%v) name set to %v", d.Id(), name)
 //  d.Set("vm_memory", vm_memory)
 //  d.Set("vlan", vlan)
   return err
@@ -91,7 +85,7 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#del
   path := "/vms/" + d.Id()
   _, err := apicall(path, "DELETE", body)
   if err != nil {
-    log.Println("Failed deleting: %T",err)
+    log.Printf("Failed deleting: %T",err)
   }
   return err
 }
@@ -158,9 +152,11 @@ func orderFromCatalog(resource_params map[string]string) string {
         dt := task["destination_type"]
         if dt != nil {
           if dt.(string) == "Vm" {
-            id = task["miq_request_id"].(string)
-            log.Printf("Found id: %v",id)
-            i = 999999 // exits the loop
+            if task["destination_id"] != nil {
+              id = task["destination_id"].(string)
+              log.Printf("Found id: %v",id)
+              i = 999999 // exits the loop
+            }
           }
         } else {
           log.Printf("No destination_type found in on of the request_tasks")
