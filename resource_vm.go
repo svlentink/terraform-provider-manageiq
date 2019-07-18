@@ -61,6 +61,12 @@ func resourceVMRead(d *schema.ResourceData, m interface{}) error {
 http://manageiq.org/docs/reference/fine/api/examples/queries
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/provision_request.adoc
 */
+
+  // TODO
+  d.Set("name",d.Id())
+  log.Printf("we haven't implemented reading, since it takes a long time for it to be available")
+  return nil 
+
   path := "/vms/" + d.Id() //+ "?expand=tags"
   resp, err := apicall(path, "", nil)
   if err != nil {

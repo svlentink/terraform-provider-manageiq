@@ -1,6 +1,8 @@
 # Terraform-provider-ManageIQ
 
-Status: development
+Status: alpha
+
+Ordering of a VM works, tested on CFME.
 
 Please fork this repo. and expand/improve it.
 
