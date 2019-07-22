@@ -37,6 +37,15 @@ src: https://www.terraform.io/docs/extend/writing-custom-providers.html
         Required: true,
       },
 */
+// https://github.com/terraform-providers/terraform-provider-google/blob/v2.11.0/google/resource_compute_instance.go#L546
+// https://github.com/terraform-providers/terraform-provider-aws/blob/v2.20.0/aws/resource_aws_ec2_fleet.go#L195
+// https://github.com/terraform-providers/terraform-provider-azurerm/blob/v1.31.0/azurerm/resource_arm_virtual_machine.go#L555  https://github.com/terraform-providers/terraform-provider-azurerm/blob/22ca0989ab65278b202677740dfbc7373b2ae82a/azurerm/tags.go#L10
+			"tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
     },
   }
 }
