@@ -34,6 +34,9 @@ order_resource_parameters:
   vm_memory: 2048
 EOF
 ```
+these `order_resource_parameters` could be included in the schema in the future,
+for now, we use this format since it was just easier to code (MVP).
+
 
 optional:
 ```

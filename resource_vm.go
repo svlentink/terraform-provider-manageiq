@@ -22,10 +22,7 @@ src: https://www.terraform.io/docs/extend/writing-custom-providers.html
         Type:     schema.TypeString,
         Computed: true,
       },
-      "service_id": &schema.Schema{
-        Type:     schema.TypeString,
-        Computed: true,
-      },
+// instead of using the following, we use MANAGEIQ_CONFIGFILE with order_resource_parameters
 /*
       "vm_memory": &schema.Schema{
         Type:     schema.TypeInt,
@@ -54,9 +51,8 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/order_service
 */
   conf := loadconfig()
   var resource_params map[string]string = conf.Orderresourceparameters
-  vm_id, service_id := orderFromCatalog(resource_params)
+  vm_id := orderFromCatalog(resource_params)
   d.SetId(vm_id)
-  d.Set("service_id",service_id)
   log.Printf("Id (%v) of new resourceVM set", vm_id)
   return resourceVMRead(d, m)
 }
@@ -85,34 +81,58 @@ func resourceVMDelete(d *schema.ResourceData, m interface{}) error {
 /*
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/delete_vm.adoc
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#delete-vm
-
-https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/services.adoc#service-retiring-now
 */
-
-/*
-  body := map[string]string{"action": "retire"}
-  path := "/services/" + d.Get("service_id").(string)
-  _, err := apicall(path, "POST", body)
+  path := "/vms/" + d.Id()
+  resp, err := apicall(path,"",nil)
   if err != nil {
-    log.Printf("Failed retiring: %T",err)
-    return err
+    log.Printf("Failed to GET vm: %T",err)
+    panic(err)
   }
-*/
+  var deletepossible bool
+  var retirepossible bool
+  log.Printf("Type of actions: %T",resp["actions"])
+  actions := resp["actions"].([]interface{})
+  for _,val := range actions {
+    act := val.(map[string]string)
+    actn := act["name"]
+    if actn == "detele" {
+      deletepossible = true
+    }
+    if actn == "retire" {
+      retirepossible = true
+    }
+  }
 
-  body2 := map[string]string{"action": "delete"}
-  path2 := "/vms/" + d.Id()
-  _, err2 := apicall(path2, "DELETE", body2)
-  if err2 != nil {
-    log.Printf("Failed deleting: %T",err2)
+  var postaction string
+  if retirepossible {
+    postaction = "retire"
   }
-  return err2
+  if deletepossible {
+    postaction = "delete"
+  }
+  if postaction == "" {
+    log.Printf("ERROR not able to retire or delete machine %v", d.Id())
+    panic(path)
+  }
+
+  body := map[string]string{"action": postaction}
+  resp2, err := apicall(path, "POST", body)
+  if err != nil {
+    log.Printf("Failed %v: %T",postaction,err)
+    panic(err)
+  }
+  if val, ok := resp2["error"]; ok {
+    log.Printf("Got an error %v",val.(string))
+    panic(val)
+  }
+  return err
 }
 
-func orderFromCatalog(resource_params map[string]string) (string, string) {
+func orderFromCatalog(resource_params map[string]string) string {
   path := "/service_catalogs?expand=resources"
   resp, err := apicall(path,"",nil)
   if err != nil {
-    log.Printf("Failed to get service_catalogs: %T",err)
+    log.Printf("Failed to GET service_catalogs: %T",err)
     panic(err)
   }
   log.Printf("Type resources: %T", resp["resources"])
@@ -188,6 +208,6 @@ func orderFromCatalog(resource_params map[string]string) (string, string) {
     log.Printf(msg)
     fmt.Errorf(msg)
   }
-  return vm_id, service_id
+  return vm_id
 }
 
