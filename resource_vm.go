@@ -93,8 +93,8 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#del
   log.Printf("Type of actions: %T",resp["actions"])
   actions := resp["actions"].([]interface{})
   for _,val := range actions {
-    act := val.(map[string]string)
-    actn := act["name"]
+    act := val.(map[string]interface{})
+    actn := act["name"].(string)
     if actn == "detele" {
       deletepossible = true
     }
