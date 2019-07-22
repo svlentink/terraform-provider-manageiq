@@ -14,7 +14,7 @@ import (
 //  "net/url"
 )
 
-func loadconfig() configfile {
+func loadconfigDEPRECATED() configfile {
   fileloc := os.Getenv("MANAGEIQ_CONFIGFILE")
   yamlfile, err := ioutil.ReadFile(fileloc)
   if err != nil {
@@ -32,28 +32,12 @@ func loadconfig() configfile {
   return conf
 }
 
-
-func apicall(path string, method string, body interface{} ) (map[string]interface{}, error) {
-  if method == "" {
-    method = "GET"
-  }
-  conf := loadconfig()
-  var uri_base string = "https://" + conf.Apihostname + "/api/"
-  var username string = os.Getenv("MANAGEIQ_USERNAME")
-  var password string = os.Getenv("MANAGEIQ_PASSWORD")
-  var insecure string = os.Getenv("MANAGEIQ_INSECURE")
-  
+func getHref(hostname string, path string) string {
+  var uri_base string = "https://" + hostname + "/api/"
   if string(path[0]) == "/" {
     // CFME throws an error if you have /api//service_catalogs
     uri_base = uri_base[:len(uri_base)-1]
   }
-
-  client := &http.Client{}
-  if strings.ToUpper(insecure) == "TRUE" {
-    tr := &http.Transport{ TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, }
-    client = &http.Client{Transport: tr}
-  }
-  
   var uri string
   // both a relative from /api or a full (get from link) are possible
   if path[0:4] == "http" {
@@ -61,10 +45,27 @@ func apicall(path string, method string, body interface{} ) (map[string]interfac
   } else {
     uri = uri_base + path
   }
-  log.Printf("User %v will do an API call: %v %v",username,method,uri)
+  return uri
+}
+
+func apicall(href string, method string, body interface{} ) (map[string]interface{}, error) {
+  if method == "" {
+    method = "GET"
+  }
+  var username string = os.Getenv("MANAGEIQ_USERNAME")
+  var password string = os.Getenv("MANAGEIQ_PASSWORD")
+  var insecure string = os.Getenv("MANAGEIQ_INSECURE")
+  
+  client := &http.Client{}
+  if strings.ToUpper(insecure) == "TRUE" {
+    tr := &http.Transport{ TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, }
+    client = &http.Client{Transport: tr}
+  }
+  
+  log.Printf("User %v will do an API call: %v %v",username,method,href)
   jsonbody, err := json.Marshal(body)
   reqbody := bytes.NewBuffer(jsonbody)
-  req, err := http.NewRequest(method, uri, reqbody)
+  req, err := http.NewRequest(method, href, reqbody)
   if err != nil {
     log.Printf("Failed creating NewRequest: %T",err)
     panic(err)

@@ -22,7 +22,7 @@ src: https://www.terraform.io/docs/extend/writing-custom-providers.html
         Type:     schema.TypeString,
         Computed: true,
       },
-// instead of using the following, we use MANAGEIQ_CONFIGFILE with order_resource_parameters
+// instead of using the following, we use tags as resource_params, see main.tf
 /*
       "vm_memory": &schema.Schema{
         Type:     schema.TypeInt,
@@ -58,9 +58,7 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/provision_req
 
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/order_service.adoc
 */
-  conf := loadconfig()
-  var resource_params map[string]string = conf.Orderresourceparameters
-  vm_id := orderFromCatalog(resource_params)
+  vm_id := orderFromCatalog(d)
   d.SetId(vm_id)
   log.Printf("Id (%v) of new resourceVM set", vm_id)
   return resourceVMRead(d, m)
@@ -72,7 +70,8 @@ http://manageiq.org/docs/reference/fine/api/examples/queries
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/provision_request.adoc
 */
   path := "/vms/" + d.Id() //+ "?expand=tags"
-  resp, err := apicall(path, "", nil)
+  href := getHref(d.Get("hostname").(string),path)
+  resp, err := apicall(href, "", nil)
   if err != nil {
     log.Printf("Failed to read VM specs, removing %v",d.Id())
     d.SetId("")
@@ -92,7 +91,8 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/delete_vm.ado
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#delete-vm
 */
   path := "/vms/" + d.Id()
-  resp, err := apicall(path,"",nil)
+  href := getHref(d.Get("hostname").(string),path)
+  resp, err := apicall(href,"",nil)
   if err != nil {
     log.Printf("Failed to GET vm: %T",err)
     panic(err)
@@ -137,9 +137,10 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#del
   return err
 }
 
-func orderFromCatalog(resource_params map[string]string) string {
+func orderFromCatalog(d *schema.ResourceData) string {
   path := "/service_catalogs?expand=resources"
-  resp, err := apicall(path,"",nil)
+  href := getHref(d.Get("hostname").(string),path)
+  resp, err := apicall(href,"",nil)
   if err != nil {
     log.Printf("Failed to GET service_catalogs: %T",err)
     panic(err)
@@ -159,6 +160,7 @@ func orderFromCatalog(resource_params map[string]string) string {
   log.Printf("Type service_href: %T", template_resource["href"])
   service_href := template_resource["href"].(string)
   
+  resource_params := d.Get("tags").(map[string]interface{})
   resource_params["href"] = service_href
   body := map[string]interface{}{ "action": "order", "resource": resource_params }
   order_href := catalog_href + "/service_templates"
@@ -180,12 +182,13 @@ func orderFromCatalog(resource_params map[string]string) string {
   service_id := result["id"].(string)
   
   path = service_req_href + "?expand=request_tasks"
+  href = getHref(d.Get("hostname").(string),path)
   var vm_id string
   // we'll loop for half an hour, increasing the timeout
   // in javascript: var j=0;for(var i=0;i<61;i++){j+=i;console.log(j)}
   for i := 0; i < 61; i++ {
     time.Sleep(time.Duration(i) * time.Second)
-    resp3, err := apicall(path,"",nil)
+    resp3, err := apicall(href,"",nil)
     if err != nil {
       panic(err)
     }
