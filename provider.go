@@ -2,6 +2,7 @@ package main
 
 import (
   "github.com/hashicorp/terraform/helper/schema"
+//  "github.com/hashicorp/terraform/terraform"
   "client"
   "strings"
   "os"
@@ -19,6 +20,7 @@ func Provider() *schema.Provider {
   			Description:  "hostname of api endpoint",
   		},
     },
+    ConfigureFunc: providerConfigure,
   }
 }
 
