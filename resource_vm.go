@@ -5,6 +5,7 @@ import (
   "log"
   "time"
   "fmt"
+  "client"
 )
 
 func resourceVM() *schema.Resource {
@@ -58,7 +59,7 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/provision_req
 
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/order_service.adoc
 */
-  vm_id := orderFromCatalog(d)
+  vm_id := orderFromCatalog(d,m)
   d.SetId(vm_id)
   log.Printf("Id (%v) of new resourceVM set", vm_id)
   return resourceVMRead(d, m)
@@ -70,8 +71,8 @@ http://manageiq.org/docs/reference/fine/api/examples/queries
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/provision_request.adoc
 */
   path := "/vms/" + d.Id() //+ "?expand=tags"
-  href := getHref(d.Get("hostname").(string),path)
-  resp, err := apicall(href, "", nil)
+  apiClient := m.(*client.Client)
+  resp, err := apiClient.Apicall(path, "", nil)
   if err != nil {
     log.Printf("Failed to read VM specs, removing %v",d.Id())
     d.SetId("")
@@ -91,8 +92,8 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/delete_vm.ado
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#delete-vm
 */
   path := "/vms/" + d.Id()
-  href := getHref(d.Get("hostname").(string),path)
-  resp, err := apicall(href,"",nil)
+  apiClient := m.(*client.Client)
+  resp, err := apiClient.Apicall(path,"",nil)
   if err != nil {
     log.Printf("Failed to GET vm: %T",err)
     panic(err)
@@ -125,7 +126,7 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#del
   }
 
   body := map[string]string{"action": postaction}
-  resp2, err := apicall(path, "POST", body)
+  resp2, err := apiClient.Apicall(path, "POST", body)
   if err != nil {
     log.Printf("Failed %v: %T",postaction,err)
     panic(err)
@@ -137,10 +138,10 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#del
   return err
 }
 
-func orderFromCatalog(d *schema.ResourceData) string {
+func orderFromCatalog(d *schema.ResourceData,m interface{}) string {
   path := "/service_catalogs?expand=resources"
-  href := getHref(d.Get("hostname").(string),path)
-  resp, err := apicall(href,"",nil)
+  apiClient := m.(*client.Client)
+  resp, err := apiClient.Apicall(path,"",nil)
   if err != nil {
     log.Printf("Failed to GET service_catalogs: %T",err)
     panic(err)
@@ -164,7 +165,7 @@ func orderFromCatalog(d *schema.ResourceData) string {
   resource_params["href"] = service_href
   body := map[string]interface{}{ "action": "order", "resource": resource_params }
   order_href := catalog_href + "/service_templates"
-  resp2, err := apicall(order_href, "POST", body)
+  resp2, err := apiClient.Apicall(order_href, "POST", body)
   if err != nil {
     log.Printf("Failed to orderFromCatalog: %T",err)
     panic(err)
@@ -182,13 +183,12 @@ func orderFromCatalog(d *schema.ResourceData) string {
   service_id := result["id"].(string)
   
   path = service_req_href + "?expand=request_tasks"
-  href = getHref(d.Get("hostname").(string),path)
   var vm_id string
   // we'll loop for half an hour, increasing the timeout
   // in javascript: var j=0;for(var i=0;i<61;i++){j+=i;console.log(j)}
   for i := 0; i < 61; i++ {
     time.Sleep(time.Duration(i) * time.Second)
-    resp3, err := apicall(href,"",nil)
+    resp3, err := apiClient.Apicall(path,"",nil)
     if err != nil {
       panic(err)
     }

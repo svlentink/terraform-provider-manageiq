@@ -2,6 +2,9 @@ package main
 
 import (
   "github.com/hashicorp/terraform/helper/schema"
+  "client"
+  "strings"
+  "os"
 )
 
 func Provider() *schema.Provider {
@@ -19,3 +22,13 @@ func Provider() *schema.Provider {
   }
 }
 
+func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+	hostname := d.Get("hostname").(string)
+	var username string = os.Getenv("MANAGEIQ_USERNAME")
+  var password string = os.Getenv("MANAGEIQ_PASSWORD")
+  var insecure bool
+  if strings.ToUpper(os.Getenv("MANAGEIQ_INSECURE")) == "TRUE" {
+    insecure = true
+  }
+	return client.NewClient(hostname,username,password,insecure), nil
+}

@@ -1,39 +1,38 @@
-package main
+package client
+
+// inspired by https://github.com/spaceapegames/terraform-provider-example/blob/master/api/client/client.go
 
 import (
   "bytes"
-  "os"
   "log"
-  "strings"
   "encoding/json"
   "net/http"
-  "gopkg.in/yaml.v2"
   "io/ioutil"
   "crypto/tls"  
 // TODO: PathEscape and QueryEscape, for security
 //  "net/url"
 )
 
-func loadconfigDEPRECATED() configfile {
-  fileloc := os.Getenv("MANAGEIQ_CONFIGFILE")
-  yamlfile, err := ioutil.ReadFile(fileloc)
-  if err != nil {
-    log.Printf("Loading config failed, please supply a valid MANAGEIQ_CONFIGFILE: %T",err)
-    panic(err)
-  }
-
-  var conf configfile
-  err2 := yaml.Unmarshal(yamlfile, &conf)
-  if err2 != nil {
-    log.Printf("Failed parsing MANAGEIQ_CONFIGFILE: %T", err2)
-    panic(err2)
-  }
-  log.Printf("Loaded %T from %v", conf, fileloc)
-  return conf
+type Client struct {
+	hostname string
+	username string
+	password string
+	insecure bool
+	httpClient *http.Client
 }
 
-func getHref(hostname string, path string) string {
-  var uri_base string = "https://" + hostname + "/api/"
+func NewClient(hostname string, username string, password string, insecure bool) *Client {
+	return &Client{
+		hostname: hostname,
+		username: username,
+		password: password,
+		insecure: insecure,
+		httpClient: &http.Client{},
+	}
+}
+
+func (c *Client) getHref(path string) string {
+  var uri_base string = "https://" + c.hostname + "/api/"
   if string(path[0]) == "/" {
     // CFME throws an error if you have /api//service_catalogs
     uri_base = uri_base[:len(uri_base)-1]
@@ -48,21 +47,19 @@ func getHref(hostname string, path string) string {
   return uri
 }
 
-func apicall(href string, method string, body interface{} ) (map[string]interface{}, error) {
+func (c *Client) Apicall(path string, method string, body interface{} ) (map[string]interface{}, error) {
+  href := c.getHref(path)
   if method == "" {
     method = "GET"
   }
-  var username string = os.Getenv("MANAGEIQ_USERNAME")
-  var password string = os.Getenv("MANAGEIQ_PASSWORD")
-  var insecure string = os.Getenv("MANAGEIQ_INSECURE")
   
   client := &http.Client{}
-  if strings.ToUpper(insecure) == "TRUE" {
+  if c.insecure {
     tr := &http.Transport{ TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, }
     client = &http.Client{Transport: tr}
   }
   
-  log.Printf("User %v will do an API call: %v %v",username,method,href)
+  log.Printf("User %v will do an API call: %v %v",c.username,method,href)
   jsonbody, err := json.Marshal(body)
   reqbody := bytes.NewBuffer(jsonbody)
   req, err := http.NewRequest(method, href, reqbody)
@@ -70,7 +67,7 @@ func apicall(href string, method string, body interface{} ) (map[string]interfac
     log.Printf("Failed creating NewRequest: %T",err)
     panic(err)
   }
-  req.SetBasicAuth(username,password)
+  req.SetBasicAuth(c.username,c.password)
   resp, err := client.Do(req)
   if err != nil {
     log.Printf("Failed doing request: %T",err)
@@ -91,4 +88,5 @@ func apicall(href string, method string, body interface{} ) (map[string]interfac
   log.Printf("Completed API call, returning a %T",result)
   return result, err
 }
+
 
