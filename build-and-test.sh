@@ -1,14 +1,14 @@
 #!/usr/bin/env sh
 set -ev
 
-rm -r /temp-build || true
-cp -a $PWD /temp-build
-cd /temp-build
-echo path $GOPATH
+if [ -z "$GOPATH" ]; then
+  echo "GOPATH not set"
+  exit 1
+fi
 cp -a client $GOPATH/src/
 
-# based on https://www.terraform.io/docs/extend/writing-custom-providers.html
-go build -o ./terraform-provider-manageiq
+mkdir -p ~/.terraform.d/plugins
+go build -o ~/.terraform.d/plugins/terraform-provider-manageiq
 
 terraform init
 terraform plan
