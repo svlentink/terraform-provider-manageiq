@@ -23,7 +23,7 @@ src: https://www.terraform.io/docs/extend/writing-custom-providers.html
         Type:     schema.TypeString,
         Computed: true,
       },
-// instead of using the following, we use tags as resource_params, see main.tf
+// instead of using the following, we use tags as resource_params, see example.tf
 /*
       "vm_memory": &schema.Schema{
         Type:     schema.TypeInt,
@@ -70,7 +70,13 @@ func resourceVMRead(d *schema.ResourceData, m interface{}) error {
 http://manageiq.org/docs/reference/fine/api/examples/queries
 https://github.com/ManageIQ/manageiq_docs/blob/master/api/examples/provision_request.adoc
 */
-  path := "/vms/" + d.Id() //+ "?expand=tags"
+  id := d.Id()
+  if id[0:5] == "ERROR" {
+    d.Set("name", id)
+    log.Printf("No VM found %v",id)
+    return nil
+  }
+  path := "/vms/" + id //+ "?expand=tags"
   apiClient := m.(*client.Client)
   resp, err := apiClient.Apicall(path, "", nil)
   if err != nil {
@@ -105,7 +111,7 @@ https://github.com/ManageIQ/manageiq_docs/blob/master/api/reference/vms.adoc#del
   for _,val := range actions {
     act := val.(map[string]interface{})
     actn := act["name"].(string)
-    if actn == "detele" {
+    if actn == "delete" {
       deletepossible = true
     }
     if actn == "retire" {
@@ -185,8 +191,8 @@ func orderFromCatalog(d *schema.ResourceData,m interface{}) string {
   path = service_req_href + "?expand=request_tasks"
   var vm_id string
   // we'll loop for half an hour, increasing the timeout
-  // in javascript: var j=0;for(var i=0;i<61;i++){j+=i;console.log(j)}
-  for i := 0; i < 61; i++ {
+  // in javascript: var j=0;for(var i=0;i<61;i++){j+=i;console.log(i,j)}
+  for i := 0; i < 61; i++ { // 86 is an hour
     time.Sleep(time.Duration(i) * time.Second)
     resp3, err := apiClient.Apicall(path,"",nil)
     if err != nil {
@@ -219,6 +225,7 @@ func orderFromCatalog(d *schema.ResourceData,m interface{}) string {
     msg := "Got no new ID, please look at this manually"
     log.Printf(msg)
     fmt.Errorf(msg)
+    return "ERROR_please_check_" + path
   }
   return vm_id
 }

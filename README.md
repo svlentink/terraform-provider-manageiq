@@ -24,6 +24,10 @@ optional:
 ```
 MANAGEIQ_INSECURE=true #ignores TLS warnings
 ```
+we might changed this to
+[configuration options](https://learn.hashicorp.com/terraform/getting-started/variables#from-environment-variables)
+as well.
+
 
 ## Links
 

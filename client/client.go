@@ -80,6 +80,11 @@ func (c *Client) Apicall(path string, method string, body interface{} ) (map[str
     panic(err)
   }
   log.Printf("Response body: %v",string(respbody))
+
+  if resp.StatusCode >= 300 {
+    log.Printf("Request did not return 2XX response: %v",resp.StatusCode)
+    panic(respbody)
+  }
   
   var result map[string]interface{}
   //json.NewDecoder(resp.Body).Decode(&result)
