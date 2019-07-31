@@ -2,7 +2,7 @@
 
 Status: alpha
 
-Ordering of a VM works, tested on CFME.
+Ordering and deleting of a VM works, tested on CFME.
 
 Please fork this repo. and expand/improve it.
 
@@ -12,15 +12,16 @@ Please fork this repo. and expand/improve it.
 docker-compose up
 ```
 
-## run
+## configuration
 
-required environment variables:
+optional environment variables:
 ```
 MANAGEIQ_USERNAME=ldapuser01
 MANAGEIQ_PASSWORD=example123
 ```
+which will set them as basic-auth values while doing the requests.
 
-optional:
+other optional:
 ```
 MANAGEIQ_INSECURE=true #ignores TLS warnings
 ```
