@@ -6,11 +6,15 @@ Ordering and deleting of a VM works, tested on CFME.
 
 Please fork this repo. and expand/improve it.
 
-## build
+## Running it
 
+Run the following from the dir with your `.tf` files:
 ```
-docker-compose up
+docker run -it --rm -v $PWD:/data \
+  svlentink/terraform-provider-manageiq [init|plan|apply|etc.]
 ```
+for the format see
+[example.tf](https://github.com/svlentink/terraform-provider-manageiq/blob/master/example.tf)
 
 ## configuration
 
