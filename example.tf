@@ -14,4 +14,8 @@ variable "resource_params" {
 
 resource "manageiq_vm" "my-vm" {
   tags = var.resource_params
+  
+  provisioner "local-exec" {
+    command = "echo ${manageiq_vm.my-vm[count.index].name}"
+  }
 }
